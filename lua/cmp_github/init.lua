@@ -167,12 +167,12 @@ function source:complete(params, callback)
 
     if params.completion_context.triggerCharacter == "#" then
         get_issues()
-        callback({items = global_issues})
+        callback(global_issues)
         return
     end
 
     get_users()
-    callback({items = global_users})
+    callback(global_users)
 end
 
 return source
