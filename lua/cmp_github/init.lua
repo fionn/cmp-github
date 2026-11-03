@@ -41,11 +41,11 @@ local function issues_callback(out)
     for _, x in ipairs(issues) do
         ---@type lsp.CompletionItem
         local issue = {
-            label = "#" .. x.number .. " " .. x.title,
+            label = string.format("# %d %s", x.number, x.title),
             sortText = tostring(1 / x.number),
             insertText = "#" .. x.number,
-            detail = x.title .. " (#" .. x.number .. ", " .. x.state:lower() .. ")",
-            documentation = "Author: @" .. x.author.login .. ", " .. x.createdAt .. "\n\n" .. x.body,
+            detail = string.format("%s (#%d, %s)", x.title, x.number, x.state:lower()),
+            documentation = string.format("Author: @%s, %s\n\n%s", x.author.login, x.createdAt, x.body),
             kind = 20
         }
         table.insert(global_issues, issue)
