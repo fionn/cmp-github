@@ -17,12 +17,13 @@ local system_opts = {
 ---@type lsp.CompletionItem[]
 local global_issues = {}
 
-local function get_issues()
-    local cmd = {"gh", "issue", "list", "--state", "all", "--limit", "2", "--json", "number,state,title,author,body"}
-    local out = vim.system(cmd, system_opts):wait(1000)
+---@param out vim.SystemCompleted
+local function issues_callback(out)
     if out.code ~= 0 then
-        vim.notify("stderr: " .. out.stderr, vim.log.levels.ERROR)
-        vim.notify("stdout: " .. out.stdout, vim.log.levels.ERROR)
+        vim.schedule(function()
+            vim.notify("stderr: " .. out.stderr, vim.log.levels.ERROR)
+            vim.notify("stdout: " .. out.stdout, vim.log.levels.ERROR)
+        end)
         return
     end
 
@@ -39,6 +40,12 @@ local function get_issues()
         }
         table.insert(global_issues, issue)
     end
+end
+
+local function get_issues()
+    local cmd = {"gh", "issue", "list", "--state", "all", "--limit", "2", "--json", "number,state,title,author,body"}
+    local issues_proc = vim.system(cmd, system_opts, issues_callback)
+    issues_proc:wait(1000)
 
     vim.list.unique(global_issues, function(x) return x.insertText end)
 end
