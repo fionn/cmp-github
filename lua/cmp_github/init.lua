@@ -34,7 +34,7 @@ local function issues_callback(out)
         local issue = {
             label = "#" .. x.number .. " " .. x.title,
             insertText = "#" .. x.number,
-            detail = x.title .. " (issue #" .. x.number .. ", " .. x.state:lower() .. ")",
+            detail = x.title .. " (#" .. x.number .. ", " .. x.state:lower() .. ")",
             documentation = "Author: @" .. x.author.login .. "\n\n" .. x.body,
             kind = 20
         }
@@ -43,9 +43,14 @@ local function issues_callback(out)
 end
 
 local function get_issues()
-    local cmd = {"gh", "issue", "list", "--state", "all", "--limit", "2", "--json", "number,state,title,author,body"}
-    local issues_proc = vim.system(cmd, system_opts, issues_callback)
+    local issues_cmd = {"gh", "issue", "list", "--state", "all", "--limit", "2", "--json", "number,state,title,author,body"}
+    local issues_proc = vim.system(issues_cmd, system_opts, issues_callback)
+
+    local prs_cmd = {"gh", "pr", "list", "--state", "all", "--limit", "2", "--json", "number,state,title,author,body"}
+    local prs_proc = vim.system(prs_cmd, system_opts, issues_callback)
+
     issues_proc:wait(1000)
+    prs_proc:wait(1000)
 
     vim.list.unique(global_issues, function(x) return x.insertText end)
 end
