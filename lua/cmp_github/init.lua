@@ -48,6 +48,8 @@ function source:is_available()
     return vim.bo.filetype == "gitcommit"
 end
 
+---@return string[]
+---@diagnostic disable-next-line
 function source:get_trigger_characters()
     return {"#"}
 end
