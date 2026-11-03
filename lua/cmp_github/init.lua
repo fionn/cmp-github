@@ -57,8 +57,6 @@ local function get_issues()
 
     issues_proc:wait(1000)
     prs_proc:wait(1000)
-
-    vim.list.unique(global_issues, function(x) return x.insertText end)
 end
 
 ---@diagnostic disable-next-line
