@@ -16,6 +16,7 @@ local system_opts = {
 
 ---@type lsp.CompletionItem[]
 local global_issues = {}
+local updated_issues = false
 
 ---@param out vim.SystemCompleted
 local function issues_callback(out)
@@ -43,6 +44,9 @@ local function issues_callback(out)
 end
 
 local function get_issues()
+    if updated_issues then return end
+    updated_issues = true
+
     local issues_cmd = {"gh", "issue", "list", "--state", "all", "--limit", "2", "--json", "number,state,title,author,body"}
     local issues_proc = vim.system(issues_cmd, system_opts, issues_callback)
 
