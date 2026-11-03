@@ -69,10 +69,13 @@ end
 ---@param out vim.SystemCompleted
 local function users_callback(out)
     if out.code ~= 0 then
-        vim.schedule(function()
-            vim.notify("stderr: " .. out.stderr, vim.log.levels.ERROR)
-            vim.notify("stdout: " .. out.stdout, vim.log.levels.ERROR)
-        end)
+        -- This is expected to fail when querying for collaborators in
+        -- repositories the user doesn't have write access to, so we fail
+        -- gracefully and return without error. This is not totally ideal, as
+        -- this callback is shared with querying contributors, which we want to
+        -- fail loudly on error, but there's no nice way to distinguish between
+        -- the two from the callback's perspective, so just eat the error
+        -- unconditionally.
         return
     end
 
@@ -111,7 +114,15 @@ local function get_users()
     local contributors_cmd = {"gh", "api", "-H", "Accept: application/vnd.github+json", "-H", "X-GitHub-Api-Version: 2026-03-10", string.format("/repos/%s/%s/contributors?per_page=100", repo_owner, repo_name), "--jq", "[.[].login]"}
     local contributors_proc = vim.system(contributors_cmd, system_opts, users_callback)
 
+    local collaborators_cmd = {"gh", "api", "-H", "Accept: application/vnd.github+json", "-H", "X-GitHub-Api-Version: 2026-03-10", string.format("/repos/%s/%s/collaborators?per_page=100", repo_owner, repo_name), "--jq", "[.[].login]"}
+    local collaborators_proc = vim.system(collaborators_cmd, system_opts, users_callback)
+
     contributors_proc:wait(1000)
+    if collaborators_proc:wait(1000).code == 0 then
+        -- If we fetched collaborators then we might have added duplicates to
+        -- the table.
+        vim.list.unique(global_users, function(x) return x.label end)
+    end
 end
 
 ---@diagnostic disable-next-line
