@@ -3,6 +3,7 @@
 ---@field title string
 ---@field state string
 ---@field body string
+---@field createdAt string
 ---@field author table
 
 ---@diagnostic disable-next-line: name-style-check
@@ -36,7 +37,7 @@ local function issues_callback(out)
             label = "#" .. x.number .. " " .. x.title,
             insertText = "#" .. x.number,
             detail = x.title .. " (#" .. x.number .. ", " .. x.state:lower() .. ")",
-            documentation = "Author: @" .. x.author.login .. "\n\n" .. x.body,
+            documentation = "Author: @" .. x.author.login .. ", " .. x.createdAt .. "\n\n" .. x.body,
             kind = 20
         }
         table.insert(global_issues, issue)
@@ -47,10 +48,10 @@ local function get_issues()
     if updated_issues then return end
     updated_issues = true
 
-    local issues_cmd = {"gh", "issue", "list", "--state", "all", "--limit", "2", "--json", "number,state,title,author,body"}
+    local issues_cmd = {"gh", "issue", "list", "--state", "all", "--limit", "2", "--json", "number,state,title,author,createdAt,body"}
     local issues_proc = vim.system(issues_cmd, system_opts, issues_callback)
 
-    local prs_cmd = {"gh", "pr", "list", "--state", "all", "--limit", "2", "--json", "number,state,title,author,body"}
+    local prs_cmd = {"gh", "pr", "list", "--state", "all", "--limit", "2", "--json", "number,state,title,author,createdAt,body"}
     local prs_proc = vim.system(prs_cmd, system_opts, issues_callback)
 
     issues_proc:wait(1000)
