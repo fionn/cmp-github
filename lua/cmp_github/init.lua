@@ -35,6 +35,7 @@ local function issues_callback(out)
         ---@type lsp.CompletionItem
         local issue = {
             label = "#" .. x.number .. " " .. x.title,
+            sortText = tostring(1 / x.number),
             insertText = "#" .. x.number,
             detail = x.title .. " (#" .. x.number .. ", " .. x.state:lower() .. ")",
             documentation = "Author: @" .. x.author.login .. ", " .. x.createdAt .. "\n\n" .. x.body,
