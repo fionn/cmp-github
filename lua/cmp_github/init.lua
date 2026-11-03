@@ -45,7 +45,8 @@ local function issues_callback(out)
             sortText = tostring(1 / x.number),
             insertText = "#" .. x.number,
             detail = string.format("%s (#%d, %s)", x.title, x.number, x.state:lower()),
-            documentation = string.format("Author: @%s, %s\n\n%s", x.author.login, x.createdAt, x.body),
+            documentation = string.format("Author: @%s, %s\n\n%s",
+                x.author.login, x.createdAt, x.body),
             kind = 20
         }
         table.insert(global_issues, issue)
@@ -56,10 +57,16 @@ local function get_issues()
     if updated_issues then return end
     updated_issues = true
 
-    local issues_cmd = {"gh", "issue", "list", "--state", "all", "--limit", "2", "--json", "number,state,title,author,createdAt,body"}
+    local issues_cmd = {
+        "gh", "issue", "list", "--state", "all", "--limit", "100",
+        "--json", "number,state,title,author,createdAt,body"
+    }
     local issues_proc = vim.system(issues_cmd, system_opts, issues_callback)
 
-    local prs_cmd = {"gh", "pr", "list", "--state", "all", "--limit", "2", "--json", "number,state,title,author,createdAt,body"}
+    local prs_cmd = {
+        "gh", "pr", "list", "--state", "all", "--limit", "100",
+        "--json", "number,state,title,author,createdAt,body"
+    }
     local prs_proc = vim.system(prs_cmd, system_opts, issues_callback)
 
     issues_proc:wait(1000)
@@ -111,10 +118,21 @@ local function get_users()
         repo_name = response.name
     end):wait(1000)
 
-    local contributors_cmd = {"gh", "api", "-H", "Accept: application/vnd.github+json", "-H", "X-GitHub-Api-Version: 2026-03-10", string.format("/repos/%s/%s/contributors?per_page=100", repo_owner, repo_name), "--jq", "[.[].login]"}
+    local contributors_cmd = {
+        "gh", "api",
+        "-H", "Accept: application/vnd.github+json",
+        "-H", "X-GitHub-Api-Version: 2026-03-10",
+        string.format("/repos/%s/%s/contributors?per_page=100", repo_owner, repo_name),
+        "--jq", "[.[].login]"
+    }
     local contributors_proc = vim.system(contributors_cmd, system_opts, users_callback)
 
-    local collaborators_cmd = {"gh", "api", "-H", "Accept: application/vnd.github+json", "-H", "X-GitHub-Api-Version: 2026-03-10", string.format("/repos/%s/%s/collaborators?per_page=100", repo_owner, repo_name), "--jq", "[.[].login]"}
+    local collaborators_cmd = {
+        "gh", "api",
+        "-H", "Accept: application/vnd.github+json",
+        "-H", "X-GitHub-Api-Version: 2026-03-10",
+        string.format("/repos/%s/%s/collaborators?per_page=100", repo_owner, repo_name),
+        "--jq", "[.[].login]"}
     local collaborators_proc = vim.system(collaborators_cmd, system_opts, users_callback)
 
     contributors_proc:wait(1000)
