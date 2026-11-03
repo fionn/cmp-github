@@ -19,6 +19,13 @@ local system_opts = {
 local global_issues = {}
 local updated_issues = false
 
+
+---@type lsp.CompletionItem[]
+local global_users = {}
+local updated_users = false
+local repo_owner = ""
+local repo_name = ""
+
 ---@param out vim.SystemCompleted
 local function issues_callback(out)
     if out.code ~= 0 then
@@ -59,6 +66,54 @@ local function get_issues()
     prs_proc:wait(1000)
 end
 
+---@param out vim.SystemCompleted
+local function users_callback(out)
+    if out.code ~= 0 then
+        vim.schedule(function()
+            vim.notify("stderr: " .. out.stderr, vim.log.levels.ERROR)
+            vim.notify("stdout: " .. out.stdout, vim.log.levels.ERROR)
+        end)
+        return
+    end
+
+    ---@type string[]
+    local users = vim.json.decode(assert(out.stdout))
+    for _, x in ipairs(users) do
+        ---@type lsp.CompletionItem
+        local user = {
+            label = "@" .. x,
+            sortText = x,
+            kind = 12
+        }
+        table.insert(global_users, user)
+    end
+
+end
+
+local function get_users()
+    if updated_users then return end
+    updated_users = true
+
+    vim.system({"gh", "repo", "view", "--json", "owner,name"}, system_opts, function(out)
+        if out.code ~= 0 then
+            vim.schedule(function()
+                vim.notify("Failed to resolve repository: " .. out.stderr, vim.log.levels.ERROR)
+            end)
+        end
+
+        local response = vim.json.decode(assert(out.stdout))
+        ---@type string
+        repo_owner = response.owner.login
+        ---@type string
+        repo_name = response.name
+    end):wait(1000)
+
+    local contributors_cmd = {"gh", "api", "-H", "Accept: application/vnd.github+json", "-H", "X-GitHub-Api-Version: 2026-03-10", string.format("/repos/%s/%s/contributors?per_page=100", repo_owner, repo_name), "--jq", "[.[].login]"}
+    local contributors_proc = vim.system(contributors_cmd, system_opts, users_callback)
+
+    contributors_proc:wait(1000)
+end
+
 ---@diagnostic disable-next-line
 function source:is_available()
     return vim.bo.filetype == "gitcommit"
@@ -67,7 +122,7 @@ end
 ---@return string[]
 ---@diagnostic disable-next-line
 function source:get_trigger_characters()
-    return {"#"}
+    return {"#", "@"}
 end
 
 ---@param params cmp.SourceCompletionApiParams
@@ -81,8 +136,14 @@ function source:complete(params, callback)
         return
     end
 
-    get_issues()
-    callback({items = global_issues})
+    if params.completion_context.triggerCharacter == "#" then
+        get_issues()
+        callback({items = global_issues})
+        return
+    end
+
+    get_users()
+    callback({items = global_users})
 end
 
 return source
