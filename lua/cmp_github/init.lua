@@ -170,8 +170,10 @@ function source:complete(params, callback)
         return
     end
 
-    get_users()
-    callback(global_users)
+    if params.completion_context.triggerCharacter == "@" then
+        get_users()
+        callback(global_users)
+    end
 end
 
 return source
