@@ -163,13 +163,6 @@ end
 ---@param callback fun(response: lsp.CompletionResponse|nil)
 ---@diagnostic disable-next-line
 function source:complete(params, callback)
-    if params.context.cursor.row < 3 then
-        -- The cursor is on the subject or gap between subject and body, where
-        -- we don't expect to be completing issues or pull requests, so abort.
-        callback()
-        return
-    end
-
     if params.completion_context.triggerCharacter == "#"
         or params.context.cursor_before_line:match("#%d+") then
         get_issues()
