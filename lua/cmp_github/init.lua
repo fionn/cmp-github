@@ -19,7 +19,6 @@ local system_opts = {
 local global_issues = {}
 local updated_issues = false
 
-
 ---@type lsp.CompletionItem[]
 local global_users = {}
 local updated_users = false
