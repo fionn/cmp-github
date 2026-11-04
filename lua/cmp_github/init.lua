@@ -30,8 +30,7 @@ local repo_name = ""
 local function issues_callback(out)
     if out.code ~= 0 then
         vim.schedule(function()
-            vim.notify("stderr: " .. out.stderr, vim.log.levels.ERROR)
-            vim.notify("stdout: " .. out.stdout, vim.log.levels.ERROR)
+            vim.notify("Failed to fetch issues or PRs", vim.log.levels.ERROR)
         end)
         return
     end
