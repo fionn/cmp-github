@@ -153,6 +153,12 @@ function source:get_trigger_characters()
     return {"#", "@"}
 end
 
+---@return string
+---@diagnostic disable-next-line
+function source:get_keyword_pattern()
+    return [[#\d\+]]
+end
+
 ---@param params cmp.SourceCompletionApiParams
 ---@param callback fun(response: lsp.CompletionResponse|nil)
 ---@diagnostic disable-next-line
