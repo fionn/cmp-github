@@ -12,7 +12,7 @@ local source = {}
 ---@type vim.SystemOpts
 local system_opts = {
     text = true,
-    timeout = 1000
+    timeout = 4000
 }
 
 ---@type lsp.CompletionItem[]
@@ -68,8 +68,8 @@ local function get_issues()
     }
     local prs_proc = vim.system(prs_cmd, system_opts, issues_callback)
 
-    issues_proc:wait(1000)
-    prs_proc:wait(1000)
+    issues_proc:wait(system_opts.timeout)
+    prs_proc:wait(system_opts.timeout)
 end
 
 ---@param out vim.SystemCompleted
@@ -115,7 +115,7 @@ local function get_users()
         repo_owner = response.owner.login
         ---@type string
         repo_name = response.name
-    end):wait(1000)
+    end):wait(system_opts.timeout)
 
     local contributors_cmd = {
         "gh", "api",
@@ -134,8 +134,8 @@ local function get_users()
         "--jq", "[.[].login]"}
     local collaborators_proc = vim.system(collaborators_cmd, system_opts, users_callback)
 
-    contributors_proc:wait(1000)
-    if collaborators_proc:wait(1000).code == 0 then
+    contributors_proc:wait(system_opts.timeout)
+    if collaborators_proc:wait(system_opts.timeout).code == 0 then
         -- If we fetched collaborators then we might have added duplicates to
         -- the table.
         vim.list.unique(global_users, function(x) return x.label end)
