@@ -156,7 +156,7 @@ end
 ---@return string
 ---@diagnostic disable-next-line
 function source:get_keyword_pattern()
-    return [[#\d\+]]
+    return [[#\d\+\|@\w\+]]
 end
 
 ---@param params cmp.SourceCompletionApiParams
@@ -177,7 +177,8 @@ function source:complete(params, callback)
         return
     end
 
-    if params.completion_context.triggerCharacter == "@" then
+    if params.completion_context.triggerCharacter == "@"
+        or params.context.cursor_before_line:match("@%w+") then
         get_users()
         callback(global_users)
     end
