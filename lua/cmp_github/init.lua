@@ -170,7 +170,8 @@ function source:complete(params, callback)
         return
     end
 
-    if params.completion_context.triggerCharacter == "#" then
+    if params.completion_context.triggerCharacter == "#"
+        or params.context.cursor_before_line:match("#%d+") then
         get_issues()
         callback(global_issues)
         return
