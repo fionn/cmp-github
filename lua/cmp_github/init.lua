@@ -1,5 +1,5 @@
 ---@class (exact) Issue
----@field number number
+---@field number integer
 ---@field title string
 ---@field state string
 ---@field body string
