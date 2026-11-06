@@ -70,8 +70,30 @@ local function get_issues()
     vim.bo.busy = vim.bo.busy + 1
     vim.api.nvim__redraw({buf = 0, statusline = true, flush = true})
 
-    issues_proc:wait(system_opts.timeout)
-    prs_proc:wait(system_opts.timeout)
+    ---@type vim.api.keyset.echo_opts
+    local progress = {
+        kind = "progress",
+        source = "cmp-github",
+        status = "running",
+        title = "Fetch issues and pull requests",
+    }
+
+    progress.id = vim.api.nvim_echo({{"Fetching issues and pull requests..."}}, false, progress)
+
+    local issues_code = issues_proc:wait(system_opts.timeout).code
+
+    progress.percent = 80
+    progress.id = vim.api.nvim_echo({{"Fetching pull requests..."}}, false, progress)
+
+    local prs_code = prs_proc:wait(system_opts.timeout).code
+
+    if issues_code + prs_code == 0 then
+        progress.status = "success"
+    else
+        progress.status = "failed"
+    end
+    progress.percent = 100
+    progress.id = vim.api.nvim_echo({{"Done"}}, false, progress)
 
     vim.bo.busy = vim.bo.busy - 1
 end
@@ -106,6 +128,16 @@ end
 local function get_users()
     if updated_users then return end
     updated_users = true
+
+    ---@type vim.api.keyset.echo_opts
+    local progress = {
+        kind = "progress",
+        source = "cmp-github",
+        status = "running",
+        title = "Fetch users",
+    }
+
+    progress.id = vim.api.nvim_echo({{"Fetching users..."}}, false, progress)
 
     local set_repo = vim.system({"gh", "repo", "view", "--json", "owner,name"}, system_opts, function(out)
         if out.code ~= 0 then
@@ -143,12 +175,20 @@ local function get_users()
         "--jq", "[.[].login]"}
     local collaborators_proc = vim.system(collaborators_cmd, system_opts, users_callback)
 
-    contributors_proc:wait(system_opts.timeout)
+    local contributors_code = contributors_proc:wait(system_opts.timeout).code
     if collaborators_proc:wait(system_opts.timeout).code == 0 then
         -- If we fetched collaborators then we might have added duplicates to
         -- the table.
         vim.list.unique(global_users, function(x) return x.label end)
     end
+
+    if contributors_code == 0 then
+        progress.status = "success"
+    else
+        progress.status = "failed"
+    end
+    progress.percent = 100
+    progress.id = vim.api.nvim_echo({{"Done"}}, false, progress)
 
     vim.bo.busy = vim.bo.busy - 1
 end
