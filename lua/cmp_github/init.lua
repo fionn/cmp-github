@@ -67,8 +67,13 @@ local function get_issues()
     }
     local prs_proc = vim.system(prs_cmd, system_opts, issues_callback)
 
+    vim.bo.busy = vim.bo.busy + 1
+    vim.api.nvim__redraw({buf = 0, statusline = true, flush = true})
+
     issues_proc:wait(system_opts.timeout)
     prs_proc:wait(system_opts.timeout)
+
+    vim.bo.busy = vim.bo.busy - 1
 end
 
 ---@param out vim.SystemCompleted
@@ -102,7 +107,7 @@ local function get_users()
     if updated_users then return end
     updated_users = true
 
-    vim.system({"gh", "repo", "view", "--json", "owner,name"}, system_opts, function(out)
+    local set_repo = vim.system({"gh", "repo", "view", "--json", "owner,name"}, system_opts, function(out)
         if out.code ~= 0 then
             vim.schedule(function()
                 vim.notify("Failed to resolve repository: " .. out.stderr, vim.log.levels.ERROR)
@@ -114,7 +119,12 @@ local function get_users()
         repo_owner = response.owner.login
         ---@type string
         repo_name = response.name
-    end):wait(system_opts.timeout)
+    end)
+
+    vim.bo.busy = vim.bo.busy + 1
+    vim.api.nvim__redraw({buf = 0, statusline = true, flush = true})
+
+    set_repo:wait(system_opts.timeout)
 
     local contributors_cmd = {
         "gh", "api",
@@ -139,6 +149,8 @@ local function get_users()
         -- the table.
         vim.list.unique(global_users, function(x) return x.label end)
     end
+
+    vim.bo.busy = vim.bo.busy - 1
 end
 
 ---@diagnostic disable-next-line
