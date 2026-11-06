@@ -37,9 +37,15 @@ local function issues_callback(out)
     ---@type Issue[]
     local issues = vim.json.decode(assert(out.stdout))
     for _, x in ipairs(issues) do
+        ---@type string?
+        local truncated_title = nil
+        if x.title:len() > 50 then
+            truncated_title = x.title:sub(1, 49) .. "…"
+        end
+
         ---@type lsp.CompletionItem
         local issue = {
-            label = string.format("#%d %s", x.number, x.title),
+            label = string.format("#%d %s", x.number, truncated_title or x.title),
             sortText = tostring(1 / x.number),
             insertText = "#" .. x.number,
             detail = string.format("%s (#%d, %s)", x.title, x.number, x.state:lower()),
